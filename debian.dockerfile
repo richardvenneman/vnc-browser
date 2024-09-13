@@ -4,7 +4,7 @@ FROM debian:stable-slim
 # Build arguments to set environment variables at build time
 ARG DEF_VNC_SCREEN=0
 ARG DEF_VNC_DISPLAY=0
-ARG DEF_VNC_RESOLUTION=1280x720
+ARG DEF_VNC_RESOLUTION=1024x768
 ARG DEF_VNC_PASSWORD=money4band
 ARG DEF_VNC_PORT=5900
 ARG DEF_NOVNC_WEBSOCKIFY_PORT=6080
@@ -14,7 +14,7 @@ ARG DEF_LC_ALL=C.UTF-8
 ARG DEF_CUSTOMIZE=false
 ARG DEF_CUSTOM_ENTRYPOINTS_DIR=/app/custom_entrypoints_scripts
 ARG DEF_AUTO_START_BROWSER=true
-ARG DEF_AUTO_START_XTERM=true
+ARG DEF_AUTO_START_XTERM=false
 ARG DEF_DEBIAN_FRONTEND=noninteractive
 
 # Set environment variables with default values
@@ -38,7 +38,7 @@ ENV DISPLAY=:${DEF_VNC_DISPLAY}.${DEF_VNC_SCREEN} \
 RUN set -e; \
     apt update && \
     apt full-upgrade -qqy && \
-    apt install -qqy \
+    apt install -qqy --no-install-recommends \
     tini \
     supervisor \
     bash \
@@ -46,7 +46,7 @@ RUN set -e; \
     x11vnc \
     novnc \
     websockify \
-    fluxbox \
+    openbox \
     xterm \
     nano \
     chromium && \
