@@ -7,7 +7,6 @@ ARG DEF_VNC_DISPLAY=0
 ARG DEF_VNC_RESOLUTION=1280x720
 ARG DEF_VNC_PASSWORD=money4band
 ARG DEF_VNC_PORT=5900
-ARG DEF_NOVNC_WEBSOCKIFY_PORT=6080
 ARG DEF_STARTING_WEBSITE_URL=https://www.google.com
 ARG DEF_LANG=en_US.UTF-8
 ARG DEF_LC_ALL=C.UTF-8
@@ -23,7 +22,6 @@ ENV DISPLAY=:${DEF_VNC_DISPLAY}.${DEF_VNC_SCREEN} \
     VNC_RESOLUTION=${DEF_VNC_RESOLUTION} \
     VNC_PASSWORD=${DEF_VNC_PASSWORD} \
     VNC_PORT=${DEF_VNC_PORT} \
-    NOVNC_WEBSOCKIFY_PORT=${DEF_NOVNC_WEBSOCKIFY_PORT} \
     STARTING_WEBSITE_URL=${DEF_STARTING_WEBSITE_URL} \
     LANG=${DEF_LANG} \
     LC_ALL=${DEF_LC_ALL} \
@@ -32,7 +30,7 @@ ENV DISPLAY=:${DEF_VNC_DISPLAY}.${DEF_VNC_SCREEN} \
     AUTO_START_BROWSER=${DEF_AUTO_START_BROWSER} \
     AUTO_START_XTERM=${DEF_AUTO_START_XTERM}
 
-# Install necessary packages and setup noVNC
+# Install necessary packages
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk update && \
@@ -43,16 +41,14 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/reposit
     bash \
     xvfb \
     x11vnc \
-    novnc \
     openbox \
     xterm \
     nano \
     firefox \
     mesa-dri-gallium \
-    mesa-gl && \
-    libva-intel-driver && \
-    intel-media-driver && \
-    ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
+    mesa-va-gallium \
+    libva-intel-driver \
+    intel-media-driver
 
 # Create necessary directories for supervisor and custom entrypoints
 RUN mkdir -p /etc/supervisor.d /app/conf.d ${DEF_CUSTOM_ENTRYPOINTS_DIR}
@@ -67,14 +63,8 @@ COPY browser_conf/firefox.conf /app/conf.d/
 # Make the entrypoint scripts executable
 RUN chmod +x /usr/local/bin/base_entrypoint.sh /usr/local/bin/customizable_entrypoint.sh
 
-# Create a Firefox profile with hardware acceleration enabled
-RUN mkdir -p /root/.mozilla/firefox/profile.default && \
-    echo 'user_pref("gfx.webrender.all", true);' >> /root/.mozilla/firefox/profile.default/user.js && \
-    echo 'user_pref("media.ffmpeg.vaapi.enabled", true);' >> /root/.mozilla/firefox/profile.default/user.js && \
-    echo 'user_pref("media.ffvpx.enabled", false);' >> /root/.mozilla/firefox/profile.default/user.js
-
-# Expose the standard VNC and noVNC ports
-EXPOSE ${VNC_PORT} ${NOVNC_WEBSOCKIFY_PORT}
+# Expose the standard VNC ports
+EXPOSE ${VNC_PORT}
 
 # Set tini as the entrypoint and the custom script as the command
 ENTRYPOINT ["/sbin/tini", "--"]
